@@ -1,0 +1,166 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="timelinescraper-service.html">
+
+<dom-module id="scrapers-list">
+<template>
+  <style>
+    h3 {
+      background-color: lightblue
+    }
+  </style>
+  <timelinescraper-service id="timelinescraperService"></timelinescraper-service>
+
+  <h2>Scrapers</h2>
+
+  <section>
+  <h3>New scraper</h3>
+  <select value={{selectedEngineName::change}}>
+     <template is="dom-repeat" items="{{engines.engines}}">
+      <option>{{item.name}}</option>
+      </template>
+  </select>
+
+  <ul>
+
+  <template is="dom-repeat" items="{{selectedEngine.params}}">
+      <li>
+      <span>{{item.name}}</span>:
+      <input value="{{item.value::input}}"></input>
+      </li>
+  </template>
+  </ul>
+  
+  <button on-click="newScraper">New</button>
+  </section>
+
+  <template id="listofscrapers" is="dom-repeat" items="{{scrapers.scrapers}}">
+    <section>
+    <h3>{{item.name}}</h3>
+      <ul>
+      <li>Engine: <span>{{item.engine}}</span></li>
+
+      <template is="dom-if" if="{{item.is_alive}}">
+        <li>Status: Running</li>
+      </template>
+      <template is="dom-if" if="{{!item.is_alive}}">
+        <li>Status: Not Running</li>
+      </template>
+
+      <li>Max_timestamp_i_have: <span>{{getFormattedTimestamp(item.status.max_timestamp_i_have)}}</span></li>
+      <li>Min_timestamp_i_have: <span>{{getFormattedTimestamp(item.status.min_timestamp_i_have)}}</span></li>
+      <li>Request_to_timestamp: <span>{{getFormattedTimestamp(item.status.request_to_timestamp)}}</span></li>
+      <li>Request_since_timestamp: <span>{{getFormattedTimestamp(item.status.request_since_timestamp)}}</span></li>
+      </ul>
+      
+      <template is="dom-if" if="{{item.is_alive}}">
+        <button on-click="stopScraper">Stop</button>
+      </template>
+      <template is="dom-if" if="{{!item.is_alive}}">
+        <button on-click="startScraper">Start</button>
+      </template>
+      <button on-click="delScraper">Delete</button>
+    </section>
+	</template>
+  
+</template>
+<script>
+
+  Polymer({
+  is: 'scrapers-list',
+  
+  properties : {
+    selectedEngineName : {
+      type : String,
+      //When the property changes, the element fires a non-bubbling DOM event 
+      // to indicate those changes to interested hosts. 
+      // Non-bubbling means it doesn't propagate to parents, so we need to specify propagate
+      notify: true,
+    },
+
+    selectedEngine : {
+      type : Object,
+      value: {}
+    },
+
+    scrapers : {
+      type : Object,
+      value : { "scrapers" : [] }
+    }
+  },
+
+  listeners: {
+    'timelinescraperService.gotUpdates': 'timelineScraperServiceUpdatesHandler',
+    'selected-engine-name-changed': 'selectedEngineNameChanged' // If we notify, you could use also this name
+  },
+
+  ready: function() {
+  },
+
+  selectedEngineNameChanged : function(e) {
+    var newEngineName = e.detail.value
+    for (var i = 0; i < this.engines.engines.length; i++) {
+      var engine = this.engines.engines[i]
+      if (newEngineName === engine.name)
+        this.selectedEngine = engine
+    }
+  },
+
+  newScraper: function(e) {
+    console.log("Going to create a new scraper");
+    var config = {}
+
+    config["engine"] = this.selectedEngine.name 
+    for (var i=0; i < this.selectedEngine.params.length; i++) {
+      var param = this.selectedEngine.params[i]
+      config[param.name] = param.value
+    }
+
+    this.$.timelinescraperService.newScraper(config)
+  },
+
+  startScraper: function(e){
+    var scraperName = this.$.listofscrapers.modelForElement(e.target).item.name;
+    this.$.timelinescraperService.startScraper(scraperName)
+  },
+
+  stopScraper: function(e) {
+    var scraperName =  this.$.listofscrapers.modelForElement(e.target).item.name;
+    this.$.timelinescraperService.stopScraper(scraperName)
+  },
+
+  delScraper: function(e) {
+    var scraperName = e.model.item.name;
+    this.$.timelinescraperService.delScraper(scraperName)
+  },
+
+  timelineScraperServiceUpdatesHandler: function(e) {
+    console.log("I got some scrapers updates")
+    this.scrapers = this.$.timelinescraperService.getScrapers()
+    this.engines = this.$.timelinescraperService.getEngines()
+
+    if (this.engines && !this.selectedEngineName ) {
+       this.selectedEngineName = this.engines.engines[0].name
+    }
+  },
+
+  getFormattedTimestamp: function (timestamp) {
+    timestamp = timestamp*1000
+    var timestampLocaleString = new Date(timestamp).toLocaleString('it-IT', {timeZoneName: 'short'});
+    if (timestampLocaleString==="Invalid Date")
+      timestampLocaleString = "None"
+    return timestampLocaleString
+  },
+
+  _toArray : function(obj) {
+    if (!obj)
+      return []
+    else
+      return Object.keys(obj).map(function(key) {
+        return {name: key, value: obj[key]};
+      });
+  }
+  
+  });
+
+</script>
+</dom-module>

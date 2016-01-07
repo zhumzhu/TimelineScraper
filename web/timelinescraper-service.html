@@ -1,0 +1,138 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/iron-ajax/iron-ajax.html">
+
+<dom-module id="timelinescraper-service">
+<template>
+  <iron-ajax
+      id="newScraper"
+      url="http://localhost:5048/api/scrapers"
+      method="PUT"
+      content-type="application/json"
+      handle-as="json"
+      on-response="newScraperResponseHandler"
+      debounce-duration="300">
+  </iron-ajax>
+
+  <iron-ajax
+      id="getScrapers"
+      url="http://localhost:5048/api/scrapers"
+      handle-as="json"
+      on-response="getScrapersResponseHandler"
+      debounce-duration="300">
+  </iron-ajax>
+
+  <iron-ajax
+      id="getEngines"
+      url="http://localhost:5048/api/engines"
+      handle-as="json"
+      on-response="getEnginesResponseHandler"
+      debounce-duration="300">
+  </iron-ajax>
+
+  <iron-ajax
+      id="startScraper"
+      url="toBeDefinedAtRuntime"
+      method="POST"
+      handle-as="json"
+      on-response="startScraperResponseHandler"
+      debounce-duration="300">
+  </iron-ajax>
+  
+  <iron-ajax
+      id="stopScraper"
+      url="toBeDefinedAtRuntime"
+      method="POST"
+      handle-as="json"
+      on-response="stopScraperResponseHandler"
+      debounce-duration="300">
+  </iron-ajax>
+
+  <iron-ajax
+      id="delScraper"
+      url="toBeDefinedAtRuntime"
+      method="DELETE"
+      handle-as="json"
+      on-response="delScraperResponseHandler"
+      debounce-duration="300">
+  </iron-ajax>
+</template>
+<script>
+
+  Polymer({
+  is: 'timelinescraper-service',
+
+  properties : {
+    startingUrl : {
+      type: String,
+      value: "http://localhost:5048/api/scrapers/"
+    } 
+  },
+
+  ready: function() {
+  	this.$.getScrapers.generateRequest()
+    this.$.getEngines.generateRequest()
+    
+    periodicallyGetScrapers = function() {
+      this.$.getScrapers.generateRequest()
+      this.async(periodicallyGetScrapers,5000)
+    }
+    this.async(periodicallyGetScrapers, 5000)
+  },
+
+  newScraper: function(config) {
+    console.log(config)
+    this.$.newScraper.body = JSON.stringify(config);
+    this.$.newScraper.generateRequest()
+  },
+
+  newScraperResponseHandler: function(request) {
+    this.$.getScrapers.generateRequest()
+  },
+
+  getScrapers: function() {
+    return this.$.getScrapers.lastResponse;
+  },
+
+  getScrapersResponseHandler: function(request) {
+    this.fire('gotUpdates');
+  },
+
+  getEngines: function() {
+    return this.$.getEngines.lastResponse;
+  },
+
+  getEnginesResponseHandler: function(request) {
+    this.fire('gotUpdates');
+  },
+
+  startScraper: function(scraperName){
+    console.log(this.startingUrl)
+    this.$.startScraper.url = this.startingUrl+scraperName+"/start"
+    this.$.startScraper.generateRequest()
+  },
+
+  startScraperResponseHandler: function(request) {
+    this.$.getScrapers.generateRequest()
+  },
+
+  stopScraper: function(scraperName){
+    this.$.stopScraper.url = this.startingUrl+scraperName+"/stop"
+    this.$.stopScraper.generateRequest()
+  },
+
+  stopScraperResponseHandler: function(request) {
+    this.$.getScrapers.generateRequest()
+  },
+
+  delScraper: function(scraperName){
+    this.$.delScraper.url = this.startingUrl+scraperName+"/"
+    this.$.delScraper.generateRequest()
+  },
+
+  delScraperResponseHandler: function(request) {
+    this.$.getScrapers.generateRequest()
+  }
+
+  });
+</script>
+</dom-module>
