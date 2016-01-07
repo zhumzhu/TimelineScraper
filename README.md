@@ -1,4 +1,4 @@
-co# Timeline Scraper
+# Timeline Scraper
 Timeline Scraper is designed to provide an extensible infrastructure for continuous scraping of temporal data, i.e. data that varies over time, here referred as timelines.
 
 The scraper main source code is in *TimelineScraper.py* that is a python implementation of an algorithm that fetches 
