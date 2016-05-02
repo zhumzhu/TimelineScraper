@@ -12,13 +12,12 @@ class TwitterTsEngine(TimelineScraperEngine):
     
     @staticmethod
     def get_config_params():
-        return [{"name":"name", "type":"String"},
-                {"name":"query", "type":"String"}, 
+        return [{"name":"query", "type":"String"}, 
                 {"name":"appkey", "type":"String"},
                 {"name":"accesstoken", "type":"String"}]
 
-    def __init__(self, query, app_key, access_token):
-        super(self.__class__, self).__init__()
+    def __init__(self, name, query, app_key, access_token):
+        super(self.__class__, self).__init__(name)
         
         self._query = query
         self._app_key = app_key
@@ -29,6 +28,7 @@ class TwitterTsEngine(TimelineScraperEngine):
            
         self._search_metadata = None
         self._statuses = []
+
     
     def seconds_to_wait_after_timeline_exhausted(self):
         return 5*60 # 5*60
@@ -37,6 +37,7 @@ class TwitterTsEngine(TimelineScraperEngine):
         return 5*60 # 15*60 is the actual value
 
     def get_next(self, request_since = None, request_to = None):
+        self.logger.debug("TwitterTsEngine is getting next for query "+self._query)
         try:
             results = None
             if not request_since and not request_to:

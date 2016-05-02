@@ -2,9 +2,14 @@ import logging,string,random
 import os,json
 from flask import Flask, request, jsonify, Response
 from functools import wraps
+
+from TimelineScraper import TimelineScraper
+
 from engines.TradingPlatformsTsEngine import TradingPlatformsTradesTsEngine, TradingPlatformsOrderbookTsEngine
 from engines.TwitterTsEngine import TwitterTsEngine
-from TimelineScraper import TimelineScraper
+
+from resultstore.FileSystemResultsStore import FileSystemResultsStore
+from resultstore.S3ResultsStore import S3ResultsStore
 
 workspace = "data"
 engines = {
@@ -12,21 +17,39 @@ engines = {
     "TradingPlatformsOrderbookTsEngine" : TradingPlatformsOrderbookTsEngine,
     "TwitterTsEngine" : TwitterTsEngine
 }
+results_stores = {
+    "FileSystemResultsStore" : FileSystemResultsStore,
+    "S3ResultsStore" : S3ResultsStore 
+}
 scrapers = {}
 
 def generate_name(size=10, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
+'''
+For an example of configuration json, see TimelineScraperManagerTest.py
+'''
 def create_scraper_from_config(config):
-    EngineClass = engines[config["engine"]]
-    engine_param_names = [param["name"] for param in EngineClass.get_config_params() if param["name"]!="name"]
-    engine_param_values = [config[param_name] for param_name in engine_param_names]
+    EngineClass = engines[config["engine"]["name"]]
+    engine_param_names = [param["name"] for param in EngineClass.get_config_params()]
+    engine_param_values = [config["engine"][param_name] for param_name in engine_param_names]
+    engine_param_values.insert(0, config["name"]) # prepending scraper name to the list
     engine = EngineClass(*engine_param_values)
 
+    ResultsStoreClass = results_stores[config["results_store"]["name"]]
+    results_store_param_values = [
+        int(float(config["results_store"][param["name"]])) if param["type"] == "Integer"
+        else config["results_store"][param["name"]] 
+        for param in ResultsStoreClass.get_config_params()]
+    results_store_param_values.insert(0, workspace) # prepending workspace and name
+    results_store_param_values.insert(0, config["name"])
+    results_store = ResultsStoreClass(*results_store_param_values)
+    
     scraper = TimelineScraper(name = config["name"], workspace = workspace)
     scraper.logger.setLevel(logging.DEBUG)
     scraper.engine = engine
-    engine.timeline_scraper = scraper
+    scraper.results_store = results_store 
+
     scrapers[scraper.name] = scraper
 
 for config_file_name in os.listdir(workspace):
@@ -80,7 +103,6 @@ def getIndex():
 @requires_auth_decorator
 def create_scraper():
     config = dict(request.get_json())
-    print config
 
     if "name" not in config:
         scraper_name = generate_name()
@@ -94,6 +116,7 @@ def create_scraper():
         create_scraper_from_config(config)
         filename = os.path.join(workspace,config["name"]+".config.txt")
         with open(filename,'w') as config_file:
+            print "created a new scraper with config config",config
             json.dump(config, config_file)
 
     scraper = scrapers[scraper_name]
@@ -110,6 +133,16 @@ def get_engines():
             "name" : engine_name,
             "params": engines[engine_name].get_config_params()
         } for engine_name in engines]
+    })
+
+@app.route("/api/resultstores")
+@requires_auth_decorator
+def get_results_store():
+    return jsonify({
+        "results_stores" : [{
+            "name" : result_store_name,
+            "params": results_stores[result_store_name].get_config_params()
+        } for result_store_name in results_stores]
     })
 
 @app.route("/api/scrapers", methods=['GET'])
@@ -172,6 +205,5 @@ def del_scraper(scraper_name):
     return jsonify(**result)
 
 if __name__ == "__main__":
-    app.debug = True
-    app.run(port=5048)
+    app.run(debug=False, port=5048) # use host='0.0.0.0' to listen to other ports
 

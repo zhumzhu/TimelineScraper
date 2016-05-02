@@ -1,7 +1,7 @@
 import threading,time,sys,traceback,logging
 import json,os
+from logging.handlers import RotatingFileHandler
 
-from resultstore.FileSystemResultsStore import FileSystemResultsStore
 
 # **************************************************************************************************
 # TimelineScraper
@@ -10,10 +10,12 @@ class TimelineScraper(object):
     
     def __init__(self, name, workspace):
         # Logging utilities
-        formatter = logging.Formatter("%(asctime)s %(levelname)-2s by %(name)-2s: %(message)s")
+        # https://docs.python.org/2/library/logging.html#logging.LogRecord
+        formatter = logging.Formatter("%(asctime)s %(levelname)-2s %(name)-2s %(module)s@%(lineno)d.%(funcName)s %(message)s")
         self.logger = logging.getLogger(name)
         # handler = logging.StreamHandler(sys.stdout)
-        handler = logging.FileHandler(workspace+"/timelinescraper.log") 
+        handler = RotatingFileHandler(workspace+"/"+name.replace(".","").replace("/","-")+".log",
+            mode='a', maxBytes=1e6, backupCount=2)
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
 
@@ -24,9 +26,7 @@ class TimelineScraper(object):
         # Config
         self._workspace = workspace
         self._name = name
-
-        # Define where to store results
-        self._results_store = FileSystemResultsStore(self)
+        
         # Obtain status in order to work with timelines
         self._status = TimelineScraperStatus(self)
 
@@ -38,6 +38,15 @@ class TimelineScraper(object):
     def engine(self, engine):
         self._engine = engine
 
+    @property
+    def results_store(self):
+        return self._results_store
+
+    @results_store.setter
+    def results_store(self, results_store):
+        # Define where to store results
+        self._results_store = results_store
+    
     @property
     def workspace(self):
         return self._workspace
@@ -143,7 +152,7 @@ class TimelineScraper(object):
 
     def __storeResult(self,result):
         # print("TimelineScraper::__storeResult")
-        self._results_store.store(result)
+        self._results_store.store_dict_as_json(result)
     
     def __storeStatus(self):
         self._status.save()
@@ -165,14 +174,14 @@ class TimelineScraper(object):
 # **************************************************************************************************
 class TimelineScraperError(Exception):
     def __init__(self, value):
-        super().__init__()
+        super(TimelineScraperError, self).__init__()
         self.value = value
     def __str__(self):
         return repr(self.value)
 
 class TimelineScraperRateLimitError(TimelineScraperError):
     def __init__(self, value):
-        super().__init__(value)
+        super(TimelineScraperRateLimitError, self).__init__(value)
 
 # **************************************************************************************************
 # TimelineScraperStatus
@@ -238,38 +247,3 @@ class TimelineScraperStatus(object):
 
     def __str__(self):
         return 'request_since:'+str(self.request_since)+' request_to:'+str(self.request_to)+' min_id_i_have:'+str(self.min_id_i_have)+' max_id_i_have:'+str(self.max_id_i_have)
-
-'''
-TEST CLASSES
-'''
-import unittest
-class TimelineScraperStatusTest(unittest.TestCase):
-    class TimelineScraperStub(object):
-        def __init__(self,name,workspace):
-            self._name = name
-            self.workspace = workspace
-
-    def setUp(self):
-        print("setting up test")
-
-    # @unittest.skip("skip one")
-    def test01(self):
-        tcStub = TimelineScraperStatusTest.TimelineScraperStub("hello","../data/")
-        status = TimelineScraperStatus(tcStub)
-        print(status)
-        
-    def test2(self):
-        tcStub = TimelineScraperStatusTest.TimelineScraperStub("hello2","../data/")
-        status = TimelineScraperStatus(tcStub, statusDict = {
-            'max_id_i_have': 10,
-            'request_to': 11,
-            'request_since': 12,
-            'min_id_i_have' : 13})
-        status.save()
-
-        returnedStatus = TimelineScraperStatus(tcStub)
-        self.assertEqual(returnedStatus.request_to, 11)
-        print(returnedStatus)
-
-if __name__ == '__main__':
-    unittest.main()

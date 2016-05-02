@@ -13,54 +13,82 @@
   <h2>Scrapers</h2>
 
   <section>
-  <h3>New scraper</h3>
-  <select value={{selectedEngineName::change}}>
-     <template is="dom-repeat" items="{{engines.engines}}">
-      <option>{{item.name}}</option>
+    <h3>New scraper</h3>
+
+    <p>
+    <span>Scraper name:</span> <input value="{{scraperName::input}}"></input>
+    </p>
+
+    <!-- ****** -->
+    <!-- Engine -->
+    <!-- ****** -->
+    <select value={{selectedEngineName::change}}>
+       <template is="dom-repeat" items="{{engines}}">
+        <option>{{item.name}}</option>
+        </template>
+    </select>
+
+    <ul>
+    <template is="dom-repeat" items="{{selectedEngine.params}}">
+        <li>
+        <span>{{item.name}}</span>:
+        <input value="{{item.value::input}}"></input>
+        </li>
+    </template>
+    </ul>
+
+    <!-- ************* -->
+    <!-- Results Store -->
+    <!-- ************* -->
+    <select value={{selectedResultsStoreName::change}}>
+      <template is="dom-repeat" items="{{results_stores}}">
+        <option>{{item.name}}</option>
       </template>
-  </select>
+    </select>
 
-  <ul>
-
-  <template is="dom-repeat" items="{{selectedEngine.params}}">
-      <li>
-      <span>{{item.name}}</span>:
-      <input value="{{item.value::input}}"></input>
-      </li>
-  </template>
-  </ul>
-  
-  <button on-click="newScraper">New</button>
+    <ul>
+    <template is="dom-repeat" items="{{selectedResultsStore.params}}">
+        <li>
+        <span>{{item.name}}</span>:
+        <input value="{{item.value::input}}"></input>
+        </li>
+    </template>
+    </ul>
+    
+    <!-- Button to create scraper -->
+    <button on-click="newScraper">New</button>
   </section>
 
-  <template id="listofscrapers" is="dom-repeat" items="{{scrapers.scrapers}}">
-    <section>
-    <h3>{{item.name}}</h3>
-      <ul>
-      <li>Engine: <span>{{item.engine}}</span></li>
+  <section>
+    <template id="listofscrapers" is="dom-repeat" items="{{scrapers.scrapers}}">
+      <section>
+      <h3>{{item.name}}</h3>
+        <ul>
+        <li>Engine: <span>{{item.engine}}</span></li>
 
-      <template is="dom-if" if="{{item.is_alive}}">
-        <li>Status: Running</li>
-      </template>
-      <template is="dom-if" if="{{!item.is_alive}}">
-        <li>Status: Not Running</li>
-      </template>
+        <template is="dom-if" if="{{item.is_alive}}">
+          <li>Status: Running</li>
+        </template>
+        <template is="dom-if" if="{{!item.is_alive}}">
+          <li>Status: Not Running</li>
+        </template>
 
-      <li>Max_timestamp_i_have: <span>{{getFormattedTimestamp(item.status.max_timestamp_i_have)}}</span></li>
-      <li>Min_timestamp_i_have: <span>{{getFormattedTimestamp(item.status.min_timestamp_i_have)}}</span></li>
-      <li>Request_to_timestamp: <span>{{getFormattedTimestamp(item.status.request_to_timestamp)}}</span></li>
-      <li>Request_since_timestamp: <span>{{getFormattedTimestamp(item.status.request_since_timestamp)}}</span></li>
-      </ul>
-      
-      <template is="dom-if" if="{{item.is_alive}}">
-        <button on-click="stopScraper">Stop</button>
-      </template>
-      <template is="dom-if" if="{{!item.is_alive}}">
-        <button on-click="startScraper">Start</button>
-      </template>
-      <button on-click="delScraper">Delete</button>
-    </section>
-	</template>
+        <li>Max_timestamp_i_have: <span>{{getFormattedTimestamp(item.status.max_timestamp_i_have)}}</span></li>
+        <li>Min_timestamp_i_have: <span>{{getFormattedTimestamp(item.status.min_timestamp_i_have)}}</span></li>
+        <li>Request_to_timestamp: <span>{{getFormattedTimestamp(item.status.request_to_timestamp)}}</span></li>
+        <li>Request_since_timestamp: <span>{{getFormattedTimestamp(item.status.request_since_timestamp)}}</span></li>
+        </ul>
+        
+        <template is="dom-if" if="{{item.is_alive}}">
+          <button on-click="stopScraper">Stop</button>
+        </template>
+        <template is="dom-if" if="{{!item.is_alive}}">
+          <button on-click="startScraper">Start</button>
+        </template>
+        <button on-click="delScraper">Delete</button>
+      </section>
+    </template>
+  </section>
   
 </template>
 <script>
@@ -69,6 +97,11 @@
   is: 'scrapers-list',
   
   properties : {
+
+    scraperName : {
+      type: String
+    },
+
     selectedEngineName : {
       type : String,
       //When the property changes, the element fires a non-bubbling DOM event 
@@ -77,7 +110,17 @@
       notify: true,
     },
 
+    selectedResultsStoreName : {
+      type : String,
+      notify: true,
+    },
+
     selectedEngine : {
+      type : Object,
+      value: {}
+    },
+
+    selectedResultsStore : {
       type : Object,
       value: {}
     },
@@ -89,8 +132,14 @@
   },
 
   listeners: {
+    // This event is fired every time timeline scraper service get a response. Triggered in timelinescraper service
+    // using the fire method
     'timelinescraperService.gotUpdates': 'timelineScraperServiceUpdatesHandler',
-    'selected-engine-name-changed': 'selectedEngineNameChanged' // If we notify, you could use also this name
+
+    // These events are fired automatically because of notify:true set in the relative properties
+    // https://www.polymer-project.org/1.0/docs/devguide/properties.html
+    'selected-engine-name-changed': 'selectedEngineNameChanged', // If we notify, you could use also this name
+    'selected-results-store-name-changed' : 'selectedResultsStoreNameChanged' 
   },
 
   ready: function() {
@@ -98,10 +147,19 @@
 
   selectedEngineNameChanged : function(e) {
     var newEngineName = e.detail.value
-    for (var i = 0; i < this.engines.engines.length; i++) {
-      var engine = this.engines.engines[i]
+    for (var i = 0; i < this.engines.length; i++) {
+      var engine = this.engines[i]
       if (newEngineName === engine.name)
         this.selectedEngine = engine
+    }
+  },
+
+  selectedResultsStoreNameChanged : function(e) {
+    var newResultsStoreName = e.detail.value
+    for (var i = 0; i < this.results_stores.length; i++) {
+      var results_store = this.results_stores[i]
+      if (newResultsStoreName === results_store.name)
+        this.selectedResultsStore = results_store
     }
   },
 
@@ -109,10 +167,20 @@
     console.log("Going to create a new scraper");
     var config = {}
 
-    config["engine"] = this.selectedEngine.name 
+    config["name"] = this.scraperName
+
+    config["engine"] = {}
+    config["engine"]["name"] = this.selectedEngine.name 
     for (var i=0; i < this.selectedEngine.params.length; i++) {
       var param = this.selectedEngine.params[i]
-      config[param.name] = param.value
+      config["engine"][param.name] = param.value
+    }
+
+    config["results_store"] = {}
+    config["results_store"]["name"] = this.selectedResultsStore.name 
+    for (var i=0; i < this.selectedResultsStore.params.length; i++) {
+      var param = this.selectedResultsStore.params[i]
+      config["results_store"][param.name] = param.value
     }
 
     this.$.timelinescraperService.newScraper(config)
@@ -135,11 +203,15 @@
 
   timelineScraperServiceUpdatesHandler: function(e) {
     console.log("I got some scrapers updates")
-    this.scrapers = this.$.timelinescraperService.getScrapers()
-    this.engines = this.$.timelinescraperService.getEngines()
+    this.scrapers = this.$.timelinescraperService.getScrapers() 
 
-    if (this.engines && !this.selectedEngineName ) {
-       this.selectedEngineName = this.engines.engines[0].name
+    if (!this.engines && this.$.timelinescraperService.getEngines() && !this.selectedEngineName ) {
+       this.engines = this.$.timelinescraperService.getEngines().engines
+       this.selectedEngineName = this.engines[0].name
+    }
+    if (!this.results_stores && this.$.timelinescraperService.getResultsStores() && !this.selectedResultsStoreName ) {
+       this.results_stores = this.$.timelinescraperService.getResultsStores().results_stores
+       this.selectedResultsStoreName = this.results_stores[0].name
     }
   },
 

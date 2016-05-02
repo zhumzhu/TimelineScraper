@@ -1,14 +1,9 @@
+import logging
+
 class TimelineScraperEngine(object):
 
-    @property
-    def timeline_scraper(self):
-        return self.timeline_scraper
-
-    @timeline_scraper.setter
-    def timeline_scraper(self, timeline_scraper):
-        self._timeline_scraper = timeline_scraper
-        self.logger = timeline_scraper.logger
-        self.logger.debug("Setting timeline_scraper property for engine")
+    def __init__(self, name):
+        self.logger = logging.getLogger(name)
 
     # Returns True or False
     def has_next(self):

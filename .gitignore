@@ -9,4 +9,8 @@ __pycache__
 data/*
 !data/.gitkeep
 
+*.pid
+*.log
+
+engines/TwitterTsEngineData.txt
 
