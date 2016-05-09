@@ -58,6 +58,7 @@ for config_file_name in os.listdir(workspace):
         with open(workspace+"/"+config_file_name,'r') as config_file:
             config = json.load(config_file)
         create_scraper_from_config(config)
+        scrapers[config["name"]].startScraper()
 
 # **************************************************************************************************
 # AUTH MANAGEMENT
