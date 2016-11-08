@@ -1,5 +1,5 @@
 import time
-from TradingPlatform import *
+from timelinescraper.engines.trading_platforms.TradingPlatform import *
 
 class TheRockTradingTradingPlatform(TradingPlatform):
     #limited to 10 requests per second

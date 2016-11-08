@@ -1,5 +1,6 @@
 # DO NOT ignore hidden files!!
 # Just ignore these hidden files/directories
+*.DS_Store
 .DS_Store
 
 .ipynb_checkpoints/
@@ -12,5 +13,4 @@ data/*
 *.pid
 *.log
 
-engines/TwitterTsEngineData.txt
-
+tests/RunMyTwitterTimelineScraper.py

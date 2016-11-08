@@ -1,9 +1,14 @@
-from urlparse import parse_qs
+# Install aliases for python2 compatibility of urllib.parse
+# http://python-future.org/compatible_idioms.html
+from future.standard_library import install_aliases
+install_aliases()
+from urllib.parse import parse_qs
+
 import time
 from dateutil import parser
 
-from TimelineScraper import TimelineScraperError, TimelineScraperRateLimitError
-from TimelineScraperEngine import TimelineScraperEngine
+from timelinescraper.TimelineScraper import TimelineScraperError, TimelineScraperRateLimitError
+from timelinescraper.engines.TimelineScraperEngine import TimelineScraperEngine
 
 from twython import Twython
 from twython.exceptions import TwythonError, TwythonRateLimitError
@@ -24,7 +29,7 @@ class TwitterTsEngine(TimelineScraperEngine):
         self._access_token = access_token
 
         self._count = 100 # 100 is the actual value
-        self._twitter_client = Twython(self._app_key, access_token=self._access_token)
+        self._twitter_client = Twython(self._app_key, self._access_token)
            
         self._search_metadata = None
         self._statuses = []
@@ -55,6 +60,7 @@ class TwitterTsEngine(TimelineScraperEngine):
         except TwythonError as e:
             raise TimelineScraperError(e)
 
+        # self.logger.debug("Received statuses: %s" % str(self._statuses))
         return self._statuses
 
     def has_next(self):

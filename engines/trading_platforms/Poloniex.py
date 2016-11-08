@@ -1,5 +1,5 @@
 import time
-from TradingPlatform import *
+from timelinescraper.engines.trading_platforms.TradingPlatform import *
 
 
 class PoloniexTradingPlatform(TradingPlatform):
@@ -13,7 +13,7 @@ class PoloniexTradingPlatform(TradingPlatform):
         }
 
     def get_trades(self, pair=TradePair.BTCUSD):
-        market_pair = self._get_market_pair(pair)
+        market_pair = self.market_pairs[pair]
 
         get_result = self._get_without_error('https://poloniex.com/public?command=returnTradeHistory&currencyPair='+market_pair)
         trades_json = get_result.json() if get_result else []
@@ -29,7 +29,7 @@ class PoloniexTradingPlatform(TradingPlatform):
 
 
     def get_orderbook(self, depth=15, pair=TradePair.BTCUSD):
-        market_pair = self._get_market_pair(pair)
+        market_pair = self.market_pairs[pair]
         get_result = self._get_without_error(
             'https://poloniex.com/public?command=returnOrderBook&currencyPair='+market_pair+'&depth='+str(depth)
         )

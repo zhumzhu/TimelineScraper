@@ -1,5 +1,5 @@
 import boto3,os
-from FileSystemResultsStore import FileSystemResultsStore
+from timelinescraper.resultstore.FileSystemResultsStore import FileSystemResultsStore
 
 class S3ResultsStore(FileSystemResultsStore):
     

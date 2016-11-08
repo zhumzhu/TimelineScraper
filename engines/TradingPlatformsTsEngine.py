@@ -1,35 +1,40 @@
 import sys
 import logging
 
-from TimelineScraperEngine import TimelineScraperEngine
+from timelinescraper.engines.TimelineScraperEngine import TimelineScraperEngine
 
-from trading_platforms.TradingPlatform import *
-from trading_platforms.Gatecoin import GatecoinTradingPlatform
-from trading_platforms.Bitstamp import BitstampTradingPlatform
-from trading_platforms.Kraken import KrakenTradingPlatform
-from trading_platforms.Poloniex import PoloniexTradingPlatform
-from trading_platforms.TheRockTrading import TheRockTradingTradingPlatform
+from timelinescraper.engines.trading_platforms.TradingPlatform import *
+from timelinescraper.engines.trading_platforms.Gatecoin import GatecoinTradingPlatform
+from timelinescraper.engines.trading_platforms.Bitstamp import BitstampTradingPlatform
+from timelinescraper.engines.trading_platforms.Kraken import KrakenTradingPlatform
+from timelinescraper.engines.trading_platforms.Poloniex import PoloniexTradingPlatform
+from timelinescraper.engines.trading_platforms.TheRockTrading import TheRockTradingTradingPlatform
 
 class TradingPlatformsTsEngine(TimelineScraperEngine):
 
-    def __init__(self, name):
+    def __init__(self, name, platform_name):
         super(TradingPlatformsTsEngine, self).__init__(name)
         self.max_id_from_last_response = None
         self.min_id_from_last_response = None
 
-        self.the_rock_trading = TheRockTradingTradingPlatform(name)
-        self.kraken = KrakenTradingPlatform(name)
-        self.poloniex = PoloniexTradingPlatform(name)
-        self.bitstamp = BitstampTradingPlatform(name)
-        self.gatecoin = GatecoinTradingPlatform(name)
+        print("Creating TradingPlatformsTsEngine with platform_name = %s" % platform_name)
+        if platform_name == "bitstamp":
+            self.platform = BitstampTradingPlatform(name)
         
-        self.trading_platforms_list = [
-            self.the_rock_trading,
-            self.kraken,
-            self.poloniex,
-            self.bitstamp,
-            self.gatecoin
-        ]
+        elif platform_name == "kraken":
+            self.platform = KrakenTradingPlatform(name)
+        
+        elif platform_name == "the_rock_trading":
+            self.platform = TheRockTradingTradingPlatform(name)
+        
+        elif platform_name == "poloniex":
+            self.platform = PoloniexTradingPlatform(name)
+
+        elif platform_name == "gatecoin":
+            self.platform = GatecoinTradingPlatform(name)
+
+        else:
+            raise TypeError("Invalid TradingPlatform Name")
 
     # Returns True or False
     def has_next(self):
@@ -71,7 +76,10 @@ class TradingPlatformsTradesTsEngine(TradingPlatformsTsEngine):
     
     @staticmethod
     def get_config_params():
-        return []
+        return [{"name":"platform_name", "type":"String"}]
+
+    def __init__(self, name, platform_name):
+        super(TradingPlatformsTradesTsEngine, self).__init__(name, platform_name)
 
     # request_since is the last processed id
     # returns a list of results. Each result is a dict object
@@ -81,10 +89,7 @@ class TradingPlatformsTradesTsEngine(TradingPlatformsTsEngine):
         request_since = 0 if not request_since else request_since
         self.logger.info("using request_since=%i"%request_since)
 
-        trades = []
-        for tp in self.trading_platforms_list:
-            obs = tp.get_all_trades()
-            trades.extend(obs)
+        trades = self.platform.get_all_trades()
 
         '''
         trades = self.poloniex.get_trades(pair = TradePair.BTCUSD) + \
@@ -110,11 +115,12 @@ class TradingPlatformsOrderbookTsEngine(TradingPlatformsTsEngine):
 
     @staticmethod
     def get_config_params():
-        return [{"name":"orderbook_depth", "type":"String"}] # TODO: Should be Integer
+        return [{"name":"platform_name", "type":"String"},
+                {"name":"orderbook_depth", "type":"String"}] # TODO: Should be Integer
 
-    def __init__(self, name, orderbook_depth):
+    def __init__(self, name, platform_name, orderbook_depth):
         self._orderbook_depth = int(orderbook_depth)
-        super(TradingPlatformsOrderbookTsEngine, self).__init__(name)
+        super(TradingPlatformsOrderbookTsEngine, self).__init__(name, platform_name)
 
     # request_since is the last processed id
     # returns a list of results. Each result is a dict object
@@ -125,31 +131,14 @@ class TradingPlatformsOrderbookTsEngine(TradingPlatformsTsEngine):
         request_since = 0 if not request_since else request_since
         self.logger.info("get_next with request_since=%i"%request_since)
 
-        orderbooks = []
-        for tp in self.trading_platforms_list:
-            obs = tp.get_all_orderbooks(self._orderbook_depth)
-            orderbooks.extend(obs)
+        orderbooks = self.platform.get_all_orderbooks(self._orderbook_depth)
 
         self.max_id_from_last_response = orderbooks[0].timestamp
         self.min_id_from_last_response = orderbooks[0].timestamp
 
         return [o.as_dict() for o in orderbooks]
 
-    def get_next_old(self, request_since = None, request_to = None):
-        request_since = 0 if not request_since else request_since
-        self.logger.info("get_next with request_since=%i"%request_since)
 
-        orderbooks = [
-            self.poloniex.get_orderbook(self._orderbook_depth, pair = TradePair.BTCUSD), 
-            self.bitstamp.get_orderbook(self._orderbook_depth, pair = TradePair.BTCUSD), 
-            self.the_rock_trading.get_orderbook(self._orderbook_depth, pair = TradePair.BTCUSD), 
-            self.gatecoin.get_orderbook(self._orderbook_depth, pair = TradePair.BTCUSD), 
-            self.kraken.get_orderbook(self._orderbook_depth, pair = TradePair.BTCUSD)]
-
-        self.max_id_from_last_response = orderbooks[0].timestamp
-        self.min_id_from_last_response = orderbooks[0].timestamp
-
-        return [o.as_dict() for o in orderbooks]
 
 
 

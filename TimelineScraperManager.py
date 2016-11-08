@@ -3,23 +3,31 @@ import os,json
 from flask import Flask, request, jsonify, Response
 from functools import wraps
 
-from TimelineScraper import TimelineScraper
+from timelinescraper.TimelineScraper import TimelineScraper
 
-from engines.TradingPlatformsTsEngine import TradingPlatformsTradesTsEngine, TradingPlatformsOrderbookTsEngine
-from engines.TwitterTsEngine import TwitterTsEngine
+from timelinescraper.engines.TradingPlatformsTsEngine import TradingPlatformsTradesTsEngine, TradingPlatformsOrderbookTsEngine
+from timelinescraper.engines.TwitterTsEngine import TwitterTsEngine
+from timelinescraper.engines.BitcoinBlockchainTsEngine import BitcoinBlockchainTsEngine
 
-from resultstore.FileSystemResultsStore import FileSystemResultsStore
-from resultstore.S3ResultsStore import S3ResultsStore
+from timelinescraper.resultstore.FileSystemResultsStore import FileSystemResultsStore
+from timelinescraper.resultstore.S3ResultsStore import S3ResultsStore
+from timelinescraper.resultstore.ZmqResultsStore import ZmqResultsStore
+from timelinescraper.resultstore.RabbitmqResultsStore import RabbitmqResultsStore
+from timelinescraper.resultstore.MongoDbResultsStore import MongoDbResultsStore
 
 workspace = "data"
 engines = {
+    "BitcoinBlockchainTsEngine" : BitcoinBlockchainTsEngine,
     "TradingPlatformsTradesTsEngine" : TradingPlatformsTradesTsEngine,
     "TradingPlatformsOrderbookTsEngine" : TradingPlatformsOrderbookTsEngine,
     "TwitterTsEngine" : TwitterTsEngine
 }
 results_stores = {
     "FileSystemResultsStore" : FileSystemResultsStore,
-    "S3ResultsStore" : S3ResultsStore 
+    "S3ResultsStore" : S3ResultsStore,
+    "ZmqResultsStore" : ZmqResultsStore,
+    "RabbitmqResultsStore" : RabbitmqResultsStore,
+    "MongoDbResultsStore" : MongoDbResultsStore
 }
 scrapers = {}
 
@@ -36,28 +44,31 @@ def create_scraper_from_config(config):
     engine_param_values.insert(0, config["name"]) # prepending scraper name to the list
     engine = EngineClass(*engine_param_values)
 
-    ResultsStoreClass = results_stores[config["results_store"]["name"]]
-    results_store_param_values = [
-        int(float(config["results_store"][param["name"]])) if param["type"] == "Integer"
-        else config["results_store"][param["name"]] 
-        for param in ResultsStoreClass.get_config_params()]
-    results_store_param_values.insert(0, workspace) # prepending workspace and name
-    results_store_param_values.insert(0, config["name"])
-    results_store = ResultsStoreClass(*results_store_param_values)
-    
     scraper = TimelineScraper(name = config["name"], workspace = workspace)
+
+    for r_store in config["results_stores"]:
+        ResultsStoreClass = results_stores[r_store["name"]]
+        results_store_param_values = [
+            int(float(r_store[param["name"]])) if param["type"] == "Integer"
+            else r_store[param["name"]] 
+            for param in ResultsStoreClass.get_config_params()]
+        results_store_param_values.insert(0, workspace) # prepending workspace and name
+        results_store_param_values.insert(0, config["name"])
+        results_store = ResultsStoreClass(*results_store_param_values)
+        scraper.add_results_store(results_store)
+    
     scraper.logger.setLevel(logging.DEBUG)
     scraper.engine = engine
-    scraper.results_store = results_store 
+    
 
-    scrapers[scraper.name] = scraper
+    return scraper
 
 for config_file_name in os.listdir(workspace):
     if config_file_name.endswith(".config.txt"):
         config = None
         with open(workspace+"/"+config_file_name,'r') as config_file:
             config = json.load(config_file)
-        create_scraper_from_config(config)
+        scrapers[scraper.name] = create_scraper_from_config(config)
         scrapers[config["name"]].startScraper()
 
 # **************************************************************************************************
@@ -67,7 +78,7 @@ def check_authentication(username, password):
     """This function is called to check if a username /
     password combination is valid.
     """
-    print "check_authentication",username,password
+    print("check_authentication",username,password)
     return username == 'admin' and password == 'password'
 
 def not_authenticated_response():
@@ -114,10 +125,10 @@ def create_scraper():
     
     scraper = None
     if scraper_name not in scrapers:
-        create_scraper_from_config(config)
+        scrapers[scraper.name] = create_scraper_from_config(config)
         filename = os.path.join(workspace,config["name"]+".config.txt")
         with open(filename,'w') as config_file:
-            print "created a new scraper with config config",config
+            print("created a new scraper with config config",config)
             json.dump(config, config_file)
 
     scraper = scrapers[scraper_name]

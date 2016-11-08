@@ -2,49 +2,14 @@ import logging
 import requests
 import random
 
+from common.trading import Trade, Orderbook
+
 class TradePair(object):
     BTCUSD = "BTCUSD"
     BTCEUR = "BTCEUR"
     ETHEUR = "ETHEUR"
     ETHUSD = "ETHUSD"
     ETHBTC = "ETHBTC"
-
-class Trade:
-    def __init__(self,timestamp,amount,price,market,pair):
-        self.timestamp = timestamp
-        self.amount = amount
-        self.price = price
-        self.market = market
-        self.pair = pair
-
-    def as_dict(self):
-        return {
-            'timestamp': self.timestamp,
-            'amount': self.amount,
-            'price': self.price,
-            'market': self.market,
-            'pair' : self.pair
-        }
-
-    def __str__(self):
-        return "%s, %i, %f, %0.4f" % (self.market,self.timestamp,self.amount,self.price)
-
-class Orderbook:
-    def __init__(self,timestamp,asks,bids,market,pair):
-        self.timestamp = timestamp
-        self.asks = asks
-        self.bids = bids
-        self.market = market
-        self.pair = pair
-
-    def as_dict(self):
-        return {
-            'timestamp' : self.timestamp,
-            'asks' : self.asks,
-            'bids' : self.bids,
-            'market' : self.market,
-            'pair' : self.pair
-        }
 
 class NonExistingMarketPair(Exception):
     def __init__(self, message):
@@ -82,6 +47,7 @@ class TradingPlatform(object):
         return trades
 
     def _get_market_pair(self,pair):
+        self.logger.warning("TradingPlatform._get_market_pair is deprecated, use direct access to market_pairs dictionary")
         market_pair = None
         if pair in self.market_pairs:
             market_pair = self.market_pairs[pair]

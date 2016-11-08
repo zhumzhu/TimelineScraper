@@ -27,6 +27,9 @@ class TimelineScraper(object):
         self._workspace = workspace
         self._name = name
         
+        # Results store
+        self._results_store_list = []
+
         # Obtain status in order to work with timelines
         self._status = TimelineScraperStatus(self)
 
@@ -37,15 +40,14 @@ class TimelineScraper(object):
     @engine.setter
     def engine(self, engine):
         self._engine = engine
-
+    
     @property
     def results_store(self):
-        return self._results_store
+        raise TypeError("Unable to get results_store, property no logner available")
 
     @results_store.setter
     def results_store(self, results_store):
-        # Define where to store results
-        self._results_store = results_store
+        raise TypeError("Unable to set results_store, property no logner available")
     
     @property
     def workspace(self):
@@ -55,6 +57,9 @@ class TimelineScraper(object):
     def name(self):
         return self._name
           
+    def add_results_store(self, results_store):
+        self._results_store_list.append(results_store)
+
     def startScraper(self):
         self.__stop_scraping = False
         self.timelineScraperThread = threading.Thread(target=self.__threadLoop)
@@ -133,7 +138,7 @@ class TimelineScraper(object):
                     self._status.request_to_timestamp = self._engine.get_min_timestamp_from_last_response() - 1
 
                 self.__storeStatus()
-                self.__condition_variable.wait(0.01)
+                self.__condition_variable.wait(0.001)
 
             except TimelineScraperRateLimitError as e:
                 # print(e)
@@ -141,7 +146,7 @@ class TimelineScraper(object):
                 self.__condition_variable.wait(self._engine.seconds_to_wait_after_rate_limit_exceeded())
             except TimelineScraperError as e:
                 self.logger.info("going to sleep because of exception...")
-                self.__condition_variable.wait(15*60)
+                self.__condition_variable.wait(e.seconds_to_wait)
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 traceback.print_exception(exc_type, exc_value, exc_traceback)
@@ -152,7 +157,8 @@ class TimelineScraper(object):
 
     def __storeResult(self,result):
         # print("TimelineScraper::__storeResult")
-        self._results_store.store_dict_as_json(result)
+        for results_store in self._results_store_list:
+            results_store.store_dict_as_json(result)
     
     def __storeStatus(self):
         self._status.save()
@@ -173,15 +179,17 @@ class TimelineScraper(object):
 # TimelineScraper Exceptions
 # **************************************************************************************************
 class TimelineScraperError(Exception):
-    def __init__(self, value):
+    def __init__(self, value, seconds_to_wait = 10*60):
         super(TimelineScraperError, self).__init__()
         self.value = value
+        self.seconds_to_wait = seconds_to_wait
+
     def __str__(self):
         return repr(self.value)
 
 class TimelineScraperRateLimitError(TimelineScraperError):
-    def __init__(self, value):
-        super(TimelineScraperRateLimitError, self).__init__(value)
+    def __init__(self, value, seconds_to_wait = 10*60):
+        super(TimelineScraperRateLimitError, self).__init__(value, seconds_to_wait)
 
 # **************************************************************************************************
 # TimelineScraperStatus

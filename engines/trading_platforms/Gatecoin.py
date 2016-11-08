@@ -1,5 +1,5 @@
 import time
-from TradingPlatform import *
+from timelinescraper.engines.trading_platforms.TradingPlatform import *
 
 class GatecoinTradingPlatform(TradingPlatform):
     def __init__(self,name):
