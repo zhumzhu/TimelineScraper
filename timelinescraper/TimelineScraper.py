@@ -146,11 +146,13 @@ class TimelineScraper(object):
                 self.__condition_variable.wait(self._engine.seconds_to_wait_after_rate_limit_exceeded())
             except TimelineScraperError as e:
                 self.logger.info("going to sleep because of exception...")
+                self.logger.error(e)
                 self.__condition_variable.wait(e.seconds_to_wait)
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 traceback.print_exception(exc_type, exc_value, exc_traceback)
                 self.logger.error("going to sleep because of UNHANDLED exception...")
+                self.logger.error(e)
                 self.__condition_variable.wait(15*60)
         
         self.__condition_variable.release()

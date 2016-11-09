@@ -2,7 +2,7 @@ import logging
 import requests
 import random
 
-from common.trading import Trade, Orderbook
+from timelinescraper.engines.trading_platforms.Common import Trade, Orderbook
 
 class TradePair(object):
     BTCUSD = "BTCUSD"

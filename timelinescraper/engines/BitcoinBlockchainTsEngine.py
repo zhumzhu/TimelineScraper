@@ -2,7 +2,7 @@ import logging
 from timelinescraper.engines.TimelineScraperEngine import TimelineScraperEngine
 from timelinescraper.TimelineScraper import TimelineScraperError
 
-from thirdpartylib.jgarzik_python_bitcoinrpc.bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from http.client import HTTPException
 import socket, codecs, base64 
 
@@ -54,9 +54,9 @@ class BitcoinBlockchainTsEngine(TimelineScraperEngine):
                 request_to = self.rpc_connection.getblockcount() - 6
 
             if request_since:
-                request_since_plus_1 = max(request_to - self.BLOCK_BATCH_SIZE, request_since+1)
+                request_since_plus_1 = max(request_to - self.BLOCK_BATCH_SIZE + 1, request_since+1)
             else:
-                request_since_plus_1 = max(request_to - self.BLOCK_BATCH_SIZE, 0)
+                request_since_plus_1 = max(request_to - self.BLOCK_BATCH_SIZE + 1, 0)
 
             self.logger.debug( "getting blocks ranging from %i to %i (included)" % (request_since_plus_1, request_to) )
             
