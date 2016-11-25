@@ -31,7 +31,7 @@ class BitcoinBlockchainTsEngine(TimelineScraperEngine):
 
         self._init_rpc_connection()
 
-    def _init_rpc_connection():
+    def _init_rpc_connection(self):
         self.rpc_connection = AuthServiceProxy("http://%s:%s@%s:%s" 
                             % (rpc_user, rpc_password, rpcserver_host, rpcserver_port), timeout=60)
 
