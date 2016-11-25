@@ -29,9 +29,11 @@ class BitcoinBlockchainTsEngine(TimelineScraperEngine):
         self.rpcserver_host = rpcserver_host
         self.rpcserver_port = rpcserver_port
 
-        self.rpc_connection = AuthServiceProxy("http://%s:%s@%s:%s" 
-                            % (rpc_user, rpc_password, rpcserver_host, rpcserver_port))
+        self._init_rpc_connection()
 
+    def _init_rpc_connection():
+        self.rpc_connection = AuthServiceProxy("http://%s:%s@%s:%s" 
+                            % (rpc_user, rpc_password, rpcserver_host, rpcserver_port), timeout=60)
 
     def seconds_to_wait_after_timeline_exhausted(self):
         return 5*60 # timeline exahusted, we need to wait for another block 5 minutes
@@ -48,8 +50,8 @@ class BitcoinBlockchainTsEngine(TimelineScraperEngine):
         try:
             if not request_to:
                 # request_to = None means we are now looking for the horizon, we create the connection
-                self.rpc_connection = AuthServiceProxy("http://%s:%s@%s:%s" 
-                    % (self.rpc_user, self.rpc_password, self.rpcserver_host, self.rpcserver_port))
+                self._init_rpc_connection()
+
                 # use only confirmed transactions
                 request_to = self.rpc_connection.getblockcount() - 6
 
@@ -99,8 +101,7 @@ class BitcoinBlockchainTsEngine(TimelineScraperEngine):
                 # print("%i, %s, %i" % (i,block_hash,len(raw_txs)) )
         
         except (socket.error, HTTPException) as e:
-            self.rpc_connection = AuthServiceProxy("http://%s:%s@%s:%s" 
-                    % (self.rpc_user, self.rpc_password, self.rpcserver_host, self.rpcserver_port))
+            self._init_rpc_connection()
             raise TimelineScraperError(e, seconds_to_wait = 10)
 
         # Setting the new status

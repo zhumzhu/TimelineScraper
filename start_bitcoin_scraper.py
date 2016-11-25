@@ -15,7 +15,7 @@ config = {
         'rpcserver_port' : '8332',
         'rpc_user' : rpc_user,
         'rpc_password' : rpc_password,
-        'block_batch_size' : 5
+        'block_batch_size' : 1
     },
     "results_stores" : [
         {
