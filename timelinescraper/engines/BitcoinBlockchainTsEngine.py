@@ -33,7 +33,7 @@ class BitcoinBlockchainTsEngine(TimelineScraperEngine):
 
     def _init_rpc_connection(self):
         self.rpc_connection = AuthServiceProxy("http://%s:%s@%s:%s" 
-                            % (rpc_user, rpc_password, rpcserver_host, rpcserver_port), timeout=60)
+                            % (self.rpc_user, self.rpc_password, self.rpcserver_host, self.rpcserver_port), timeout=60)
 
     def seconds_to_wait_after_timeline_exhausted(self):
         return 5*60 # timeline exahusted, we need to wait for another block 5 minutes
