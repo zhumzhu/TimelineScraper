@@ -209,17 +209,17 @@ class TimelineScraperStatus(object):
             except IOError:
                 statusDict = {}
 
-        self.max_id_i_have = int(statusDict["max_id_i_have"]) if "max_id_i_have" in statusDict and statusDict["max_id_i_have"] else None
-        self.max_timestamp_i_have = statusDict["max_timestamp_i_have"] if "max_timestamp_i_have" in statusDict and statusDict["max_timestamp_i_have"] else None
+        self.max_id_i_have = int(statusDict["max_id_i_have"]) if "max_id_i_have" in statusDict and statusDict["max_id_i_have"] is not None else None
+        self.max_timestamp_i_have = statusDict["max_timestamp_i_have"] if "max_timestamp_i_have" in statusDict and statusDict["max_timestamp_i_have"] is not None else None
         
-        self.request_to = int(statusDict["request_to"]) if "request_to" in statusDict and statusDict["request_to"] else None
-        self.request_to_timestamp = statusDict["request_to_timestamp"] if "request_to_timestamp" in statusDict and statusDict["request_to_timestamp"] else None
+        self.request_to = int(statusDict["request_to"]) if "request_to" in statusDict and statusDict["request_to"] is not None else None
+        self.request_to_timestamp = statusDict["request_to_timestamp"] if "request_to_timestamp" in statusDict and statusDict["request_to_timestamp"] is not None else None
         
-        self.request_since = int(statusDict["request_since"]) if "request_since" in statusDict and statusDict["request_since"] else None
-        self.request_since_timestamp = statusDict["request_since_timestamp"] if "request_since_timestamp" in statusDict and statusDict["request_since_timestamp"] else None
+        self.request_since = int(statusDict["request_since"]) if "request_since" in statusDict and statusDict["request_since"] is not None else None
+        self.request_since_timestamp = statusDict["request_since_timestamp"] if "request_since_timestamp" in statusDict and statusDict["request_since_timestamp"] is not None else None
 
-        self.min_id_i_have = int(statusDict["min_id_i_have"]) if "min_id_i_have" in statusDict and statusDict["min_id_i_have"] else None
-        self.min_timestamp_i_have = statusDict["min_timestamp_i_have"] if "min_timestamp_i_have" in statusDict and statusDict["min_timestamp_i_have"] else None
+        self.min_id_i_have = int(statusDict["min_id_i_have"]) if "min_id_i_have" in statusDict and statusDict["min_id_i_have"] is not None else None
+        self.min_timestamp_i_have = statusDict["min_timestamp_i_have"] if "min_timestamp_i_have" in statusDict and statusDict["min_timestamp_i_have"] is not None else None
 
 
     
