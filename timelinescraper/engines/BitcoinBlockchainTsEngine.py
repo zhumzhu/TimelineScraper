@@ -48,14 +48,14 @@ class BitcoinBlockchainTsEngine(TimelineScraperEngine):
         results = []
 
         try:
-            if not request_to:
+            if request_to is None:
                 # request_to = None means we are now looking for the horizon, we create the connection
                 self._init_rpc_connection()
 
                 # use only confirmed transactions
                 request_to = self.rpc_connection.getblockcount() - 6
 
-            if request_since:
+            if request_since is not None:
                 request_since_plus_1 = max(request_to - self.BLOCK_BATCH_SIZE + 1, request_since+1)
             else:
                 request_since_plus_1 = max(request_to - self.BLOCK_BATCH_SIZE + 1, 0)
@@ -105,7 +105,7 @@ class BitcoinBlockchainTsEngine(TimelineScraperEngine):
             raise TimelineScraperError(e, seconds_to_wait = 10)
 
         # Setting the new status
-        if request_since:
+        if request_since is not None:
             self.should_continue = not (request_since_plus_1 == request_since+1)
         else:
             self.should_continue = not (request_since_plus_1 == 0)
