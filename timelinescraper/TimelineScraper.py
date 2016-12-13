@@ -99,7 +99,7 @@ class TimelineScraper(object):
                     self.__storeResult(result)
                 
                 # If I'm going forward -->| but no new tweets are returned
-                if not self._status.request_to and len(results)==0:
+                if self._status.request_to is None and len(results)==0:
                     self.logger.info(
                         "going to sleep because of timeline exhausted")
                     self.__condition_variable.wait(
@@ -108,13 +108,13 @@ class TimelineScraper(object):
                     continue
 
                 # Else if I'm going forward -->| and some new tweets are returned
-                elif not self._status.request_to:
+                elif self._status.request_to is None:
                     # I would like to store the max_id_i_have
                     self._status.max_id_i_have = self._engine.get_max_id_from_last_response()
                     self._status.max_timestamp_i_have = self.engine.get_max_timestamp_from_last_response()
 
                 # If I'm discoverying endless timeline
-                if not self._status.request_since:
+                if self._status.request_since is None:
                     self._status.min_id_i_have = self._engine.get_min_id_from_last_response()
                     self._status.min_timestamp_i_have = self._engine.get_min_timestamp_from_last_response()
 
