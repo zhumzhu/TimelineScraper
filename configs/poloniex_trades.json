@@ -1,0 +1,16 @@
+{
+    "name" : "poloniex_trades",
+    
+    "engine" : {
+        "name" : "TradingPlatformsTradesTsEngine",
+        "platform_name" : "poloniex"
+    },
+    
+    "results_stores" : [
+        {
+            "name" : "FileSystemResultsStore",
+            "rollover_enabled": true,
+            "rollover_trigger_size": 10e9
+        }
+    ]
+}

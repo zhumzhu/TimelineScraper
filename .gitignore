@@ -7,10 +7,5 @@
 *.pyc
 __pycache__
 
-data/*
-!data/.gitkeep
-
 *.pid
 *.log
-
-tests/RunMyTwitterTimelineScraper.py

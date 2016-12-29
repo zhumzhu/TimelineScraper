@@ -1,0 +1,4 @@
+*
+!.gitignore
+!bitcoin_blockchain.json
+!poloniex_trades.json

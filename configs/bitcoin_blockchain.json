@@ -1,0 +1,20 @@
+{
+    "name" : "bitcoin_blochchain",
+    
+    "engine" : {
+        "name" : "BitcoinBlockchainTsEngine",
+        "rpcserver_host" : "localhost",
+        "rpcserver_port" : 8332,
+        "rpc_user" : "bitcoin_orpheus",
+        "rpc_password" : "EwJeV3LZTyTVozdECF027BkBMnNDwQaVfakG3A4wXYyk",
+        "block_batch_size" : 1
+    },
+    
+    "results_stores" : [
+        {
+            "name" : "FileSystemResultsStore",
+            "rollover_enabled": true,
+            "rollover_trigger_size": 10e9
+        }
+    ]
+}
