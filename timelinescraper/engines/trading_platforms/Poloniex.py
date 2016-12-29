@@ -1,22 +1,65 @@
-import time
-from timelinescraper.engines.trading_platforms.TradingPlatform import *
+import time, multiprocessing
 
+from timelinescraper.engines.trading_platforms.Common import *
+from timelinescraper.engines.trading_platforms.TradingPlatform import TradingPlatform
 
+from twisted.internet import reactor
+from twisted.internet.defer import inlineCallbacks
+from autobahn.twisted.wamp import ApplicationSession, ApplicationRunner
+
+poloniex_market_pairs = {
+    TradePair.BTCUSD : "USDT_BTC",
+    TradePair.ETHUSD : "USDT_ETH",
+
+    TradePair.ETHBTC : "BTC_ETH",
+    TradePair.XMRBTC : "BTC_XMR"
+}
+
+# Create a queue for each market pair, because we need to return trades
+# selectively for each market pair
+trades_queue = {k:multiprocessing.Queue() for k in poloniex_market_pairs.keys()}
+
+def on_market_event(market_pair, args, kwargs):
+    new_trades = [arg for arg in args if arg["type"] == "newTrade"]
+    for t in new_trades:
+        # print(market_pair, t)
+        trades_queue[market_pair].put(t["data"])
+
+# Here we define the WAMP client
+class PoloniexComponent(ApplicationSession):
+    @inlineCallbacks
+    def onJoin(self, details):                
+        for mp in poloniex_market_pairs.keys():
+            # Here we dynamically define specific handlers for each market pair
+            exec("def on_{0}(*args, **kwargs): on_market_event('{0}', args, kwargs)"\
+                 .format(mp))
+
+            mp_poloniex_name = poloniex_market_pairs[mp]
+            yield self.subscribe(locals()['on_'+mp], mp_poloniex_name)
+
+    def onDisconnect(self):
+        if reactor.running:
+            reactor.stop()
+
+def run_poloniex_proxy():
+    runner = ApplicationRunner(url=u"wss://api.poloniex.com", realm=u"realm1")
+    runner.run(PoloniexComponent)
+
+# The true TradingPlatform class
 class PoloniexTradingPlatform(TradingPlatform):
     def __init__(self,name):
         super(PoloniexTradingPlatform, self).__init__(name)
         self.market = "poloniex"
-        self.market_pairs = {
-            TradePair.BTCUSD : "USDT_BTC",
-            TradePair.ETHBTC : "BTC_ETH",
-            TradePair.ETHUSD : "USDT_ETH"
-        }
+        self.market_pairs = poloniex_market_pairs
+        self.poloniex_proxy_process = multiprocessing.Process(target=run_poloniex_proxy)
+        self.poloniex_proxy_process.start()
 
     def get_trades(self, pair=TradePair.BTCUSD):
-        market_pair = self.market_pairs[pair]
-
-        get_result = self._get_without_error('https://poloniex.com/public?command=returnTradeHistory&currencyPair='+market_pair)
-        trades_json = get_result.json() if get_result else []
+        trades_by_trading_platform = []
+        q = trades_queue[pair]
+        while not q.empty():
+            # self.logger.debug("Bitstamp using Proxy, removing from the queue");
+            trades_by_trading_platform.append( q.get() )
         
         trades = [Trade(
             timestamp = int(time.mktime(time.strptime(trade_json["date"], '%Y-%m-%d %H:%M:%S'))),        
@@ -24,7 +67,7 @@ class PoloniexTradingPlatform(TradingPlatform):
             price = float(trade_json["rate"]),
             market = self.market,
             pair = pair
-            ) for trade_json in trades_json]
+            ) for trade_json in trades_by_trading_platform]
         return trades
 
 
@@ -50,3 +93,6 @@ class PoloniexTradingPlatform(TradingPlatform):
         )
 
         return orderbook
+
+
+

@@ -2,14 +2,7 @@ import logging
 import requests
 import random
 
-from timelinescraper.engines.trading_platforms.Common import Trade, Orderbook
-
-class TradePair(object):
-    BTCUSD = "BTCUSD"
-    BTCEUR = "BTCEUR"
-    ETHEUR = "ETHEUR"
-    ETHUSD = "ETHUSD"
-    ETHBTC = "ETHBTC"
+from timelinescraper.engines.trading_platforms.Common import *
 
 class NonExistingMarketPair(Exception):
     def __init__(self, message):

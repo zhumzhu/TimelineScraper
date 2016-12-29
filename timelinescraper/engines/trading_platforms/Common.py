@@ -3,11 +3,16 @@ class Asset:
     EUR = "EUR"
     ETH = "ETH"
     USD = "USD"
+    XMR = "XMR"
 
 class TradePair:
     def __init__(self, asset, currency):
         self.asset = asset
         self.currency = currency
+
+    @property
+    def name(self):
+        return str(self)
 
     def __str__(self):
         return '%s%s'%(self.asset,self.currency)
@@ -15,9 +20,13 @@ class TradePair:
     def __repr__(self):
         return {'currency':self.currency, 'asset':self.asset}
 
-TradePair.BTCUSD = TradePair(asset = Asset.BTC, currency = Asset.USD)
-TradePair.BTCEUR = TradePair(asset = Asset.BTC, currency = Asset.EUR)
-TradePair.ETHBTC = TradePair(asset = Asset.ETH, currency = Asset.BTC)
+TradePair.BTCUSD = TradePair(asset = Asset.BTC, currency = Asset.USD).name
+TradePair.ETHUSD = TradePair(asset = Asset.ETH, currency = Asset.USD).name
+
+TradePair.BTCEUR = TradePair(asset = Asset.BTC, currency = Asset.EUR).name
+
+TradePair.XMRBTC = TradePair(asset = Asset.XMR, currency = Asset.BTC).name
+TradePair.ETHBTC = TradePair(asset = Asset.ETH, currency = Asset.BTC).name
 
 class TradingPlatform:
     bitstamp = "bitstamp"
