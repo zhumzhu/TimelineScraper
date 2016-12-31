@@ -2,8 +2,13 @@ class Asset:
     BTC = "BTC"
     EUR = "EUR"
     ETH = "ETH"
+    ETC = "ETC"
     USD = "USD"
     XMR = "XMR"
+    ZEC = "ZEC"
+    LTC = "LTC"
+    DASH = "DASH"
+    XRP = "XRP"
 
 class TradePair:
     def __init__(self, asset, currency):
@@ -22,11 +27,18 @@ class TradePair:
 
 TradePair.BTCUSD = TradePair(asset = Asset.BTC, currency = Asset.USD).name
 TradePair.ETHUSD = TradePair(asset = Asset.ETH, currency = Asset.USD).name
+TradePair.ETCUSD = TradePair(asset = Asset.ETC, currency = Asset.USD).name
 
 TradePair.BTCEUR = TradePair(asset = Asset.BTC, currency = Asset.EUR).name
 
-TradePair.XMRBTC = TradePair(asset = Asset.XMR, currency = Asset.BTC).name
+TradePair.ETCETH = TradePair(asset = Asset.ETC, currency = Asset.ETH).name
+
 TradePair.ETHBTC = TradePair(asset = Asset.ETH, currency = Asset.BTC).name
+TradePair.ETCBTC = TradePair(asset = Asset.ETC, currency = Asset.BTC).name
+TradePair.XMRBTC = TradePair(asset = Asset.XMR, currency = Asset.BTC).name
+TradePair.ZECBTC = TradePair(asset = Asset.ZEC, currency = Asset.BTC).name
+TradePair.DASHBTC = TradePair(asset = Asset.DASH, currency = Asset.BTC).name
+
 
 class TradingPlatform:
     bitstamp = "bitstamp"

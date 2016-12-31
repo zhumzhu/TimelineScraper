@@ -11,8 +11,13 @@ poloniex_market_pairs = {
     TradePair.BTCUSD : "USDT_BTC",
     TradePair.ETHUSD : "USDT_ETH",
 
+    TradePair.ETCETH : "ETH_ETC",
+
     TradePair.ETHBTC : "BTC_ETH",
-    TradePair.XMRBTC : "BTC_XMR"
+    TradePair.ETCBTC : "BTC_ETC",
+    TradePair.XMRBTC : "BTC_XMR",
+    TradePair.ZECBTC : "BTC_ZEC",
+    TradePair.DASHBTC: "BTC_DASH"
 }
 
 # Create a queue for each market pair, because we need to return trades
