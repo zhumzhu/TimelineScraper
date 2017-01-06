@@ -10,7 +10,7 @@ kill $PID
 
 if [ $CHILD_PID ]; then
 	echo "Killing child PID $CHILD_PID"
-	kill $CHILD_PID
+	kill -9 $CHILD_PID
 fi
 
 rm data/$filename.pid

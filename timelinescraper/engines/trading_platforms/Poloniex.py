@@ -1,4 +1,4 @@
-import time, multiprocessing
+import time, sys, multiprocessing
 
 from timelinescraper.engines.trading_platforms.Common import *
 from timelinescraper.engines.trading_platforms.TradingPlatform import TradingPlatform
@@ -43,12 +43,25 @@ class PoloniexComponent(ApplicationSession):
             yield self.subscribe(locals()['on_'+mp], mp_poloniex_name)
 
     def onDisconnect(self):
+        print("Poloniex Proxy Disconnected")
         if reactor.running:
             reactor.stop()
 
 def run_poloniex_proxy():
-    runner = ApplicationRunner(url=u"wss://api.poloniex.com", realm=u"realm1")
-    runner.run(PoloniexComponent)
+    while True:
+        print("Running a new Poloniex Proxy")
+        sys.stdout.flush()
+        
+        try:
+            runner = ApplicationRunner(url=u"wss://api.poloniex.com", realm=u"realm1")
+            runner.run(PoloniexComponent)
+        except Exception:
+            pass
+            
+        sys.stderr.flush()
+        sys.stdout.flush()
+        time.sleep(2)
+
 
 # The true TradingPlatform class
 class PoloniexTradingPlatform(TradingPlatform):
@@ -74,7 +87,6 @@ class PoloniexTradingPlatform(TradingPlatform):
             pair = pair
             ) for trade_json in trades_by_trading_platform]
         return trades
-
 
     def get_orderbook(self, depth=15, pair=TradePair.BTCUSD):
         market_pair = self.market_pairs[pair]
