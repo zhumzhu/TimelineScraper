@@ -10,12 +10,25 @@ from autobahn.twisted.wamp import ApplicationSession, ApplicationRunner
 poloniex_market_pairs = {
     TradePair.BTCUSD : "USDT_BTC",
     TradePair.ETHUSD : "USDT_ETH",
+    TradePair.XRPUSD : "USDT_XRP",
+    TradePair.XMRUSD : "USDT_XMR",
+    TradePair.LTCUSD : "USDT_LTC",
+    TradePair.ETCUSD : "USDT_ETC",
+    TradePair.DASHUSD : "USDT_DASH",
+    TradePair.ZECUSD : "USDT_ZEC",
 
     TradePair.ETCETH : "ETH_ETC",
+    TradePair.ZECETH : "ETC_ZEC",
+
+    TradePair.ZECXMR  : "XMR_ZEC",
+    TradePair.DASHXMR : "XMR_DASH",
+    TradePair.LTCXMR  : "XMR_LTC",
 
     TradePair.ETHBTC : "BTC_ETH",
-    TradePair.ETCBTC : "BTC_ETC",
     TradePair.XMRBTC : "BTC_XMR",
+    TradePair.ETCBTC : "BTC_ETC",
+    TradePair.LTCBTC : "BTC_LTC",
+    TradePair.XRPBTC : "BTC_XRP",
     TradePair.ZECBTC : "BTC_ZEC",
     TradePair.DASHBTC: "BTC_DASH"
 }
@@ -57,7 +70,7 @@ def run_poloniex_proxy():
             runner.run(PoloniexComponent)
         except Exception:
             pass
-            
+
         sys.stderr.flush()
         sys.stdout.flush()
         time.sleep(2)
