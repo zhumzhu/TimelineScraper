@@ -40,7 +40,7 @@ trades_queue = {k:multiprocessing.Queue() for k in poloniex_market_pairs.keys()}
 def on_market_event(market_pair, args, kwargs):
     new_trades = [arg for arg in args if arg["type"] == "newTrade"]
     for t in new_trades:
-        print(market_pair, t)
+        # print(market_pair, t)
         trades_queue[market_pair].put(t["data"])
 
 # Here we define the WAMP client
