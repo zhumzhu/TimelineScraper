@@ -57,24 +57,20 @@ class PoloniexComponent(ApplicationSession):
 
     def onDisconnect(self):
         print("Poloniex Proxy Disconnected")
-        if reactor.running:
-            reactor.stop()
+        reactor.stop()
 
 def run_poloniex_proxy():
-    while True:
-        print("Running a new Poloniex Proxy")
-        sys.stdout.flush()
+    print("Running a new Poloniex Proxy")
+    sys.stdout.flush()
+    
+    try: 
+        runner = ApplicationRunner(url=u"wss://api.poloniex.com", realm=u"realm1")
+        runner.run(PoloniexComponent, auto_reconnect=True)
+    except Exception as e:
+        print(e)
         
-        try:
-            runner = ApplicationRunner(url=u"wss://api.poloniex.com", realm=u"realm1")
-            runner.run(PoloniexComponent)
-        except Exception as e:
-            print(e)
-            del runner
-
-        sys.stderr.flush()
-        sys.stdout.flush()
-        time.sleep(2)
+    sys.stderr.flush()
+    sys.stdout.flush()
 
 
 # The true TradingPlatform class
