@@ -40,7 +40,7 @@ trades_queue = {k:multiprocessing.Queue() for k in poloniex_market_pairs.keys()}
 def on_market_event(market_pair, args, kwargs):
     new_trades = [arg for arg in args if arg["type"] == "newTrade"]
     for t in new_trades:
-        # print(market_pair, t)
+        print(market_pair, t)
         trades_queue[market_pair].put(t["data"])
 
 # Here we define the WAMP client
@@ -57,17 +57,15 @@ class PoloniexComponent(ApplicationSession):
 
     def onDisconnect(self):
         print("Poloniex Proxy Disconnected")
-        reactor.stop()
+        sys.stdout.flush()
+        # reactor.stop()
 
 def run_poloniex_proxy():
     print("Running a new Poloniex Proxy")
     sys.stdout.flush()
     
-    try: 
-        runner = ApplicationRunner(url=u"wss://api.poloniex.com", realm=u"realm1")
-        runner.run(PoloniexComponent, auto_reconnect=True)
-    except Exception as e:
-        print(e)
+    runner = ApplicationRunner(url=u"wss://api.poloniex.com", realm=u"realm1")
+    runner.run(PoloniexComponent, auto_reconnect=True)
         
     sys.stderr.flush()
     sys.stdout.flush()
