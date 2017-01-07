@@ -68,8 +68,9 @@ def run_poloniex_proxy():
         try:
             runner = ApplicationRunner(url=u"wss://api.poloniex.com", realm=u"realm1")
             runner.run(PoloniexComponent)
-        except Exception:
-            pass
+        except Exception as e:
+            print(e)
+            del runner
 
         sys.stderr.flush()
         sys.stdout.flush()
