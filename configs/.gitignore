@@ -2,3 +2,5 @@
 !.gitignore
 !bitcoin_mainnet_scraper.json
 !poloniex_trades.json
+!poloniex_trades_rabbitmq.json
+
