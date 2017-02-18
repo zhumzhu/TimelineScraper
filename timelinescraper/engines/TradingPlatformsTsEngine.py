@@ -12,10 +12,11 @@ from timelinescraper.engines.trading_platforms.TheRockTrading import TheRockTrad
 
 class TradingPlatformsTsEngine(TimelineScraperEngine):
 
-    def __init__(self, name, platform_name):
+    def __init__(self, name, platform_name, seconds_to_wait):
         super(TradingPlatformsTsEngine, self).__init__(name)
         self.max_id_from_last_response = None
         self.min_id_from_last_response = None
+        self.seconds_to_wait = seconds_to_wait
 
         print("Creating TradingPlatformsTsEngine with platform_name = %s" % platform_name)
         if platform_name == "bitstamp":
@@ -58,7 +59,7 @@ class TradingPlatformsTsEngine(TimelineScraperEngine):
         
     # Returns number of seconds
     def seconds_to_wait_after_timeline_exhausted(self):
-        return 10
+        return self.seconds_to_wait
 
     def seconds_to_wait_after_rate_limit_exceeded(self):
         raise NotImplementedError("Rate Limit is never Exceeded in TradingPlatformsTimelineScraper ")
@@ -76,10 +77,11 @@ class TradingPlatformsTradesTsEngine(TradingPlatformsTsEngine):
     
     @staticmethod
     def get_config_params():
-        return [{"name":"platform_name", "type":"String"}]
+        return [{"name":"platform_name", "type":"string"},
+                {"name": "seconds_to_wait", "type":"int"}]
 
-    def __init__(self, name, platform_name):
-        super(TradingPlatformsTradesTsEngine, self).__init__(name, platform_name)
+    def __init__(self, name, platform_name, seconds_to_wait):
+        super(TradingPlatformsTradesTsEngine, self).__init__(name, platform_name, seconds_to_wait)
 
     # request_since is the last processed id
     # returns a list of results. Each result is a dict object

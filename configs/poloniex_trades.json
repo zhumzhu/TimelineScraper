@@ -3,7 +3,8 @@
     
     "engine" : {
         "name" : "TradingPlatformsTradesTsEngine",
-        "platform_name" : "poloniex"
+        "platform_name" : "poloniex",
+        "seconds_to_wait" : 10
     },
     
     "results_stores" : [

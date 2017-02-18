@@ -1,9 +1,10 @@
 {
-    "name" : "poloniex_trades",
+    "name" : "poloniex_trades_rabbitmq",
     
     "engine" : {
         "name" : "TradingPlatformsTradesTsEngine",
-        "platform_name" : "poloniex"
+        "platform_name" : "poloniex",
+        "seconds_to_wait" : 1
     },
     
     "results_stores" : [
