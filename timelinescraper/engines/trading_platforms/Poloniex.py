@@ -1,4 +1,6 @@
 import time, sys, multiprocessing
+from datetime import datetime
+import pytz
 
 from timelinescraper.engines.trading_platforms.Common import *
 from timelinescraper.engines.trading_platforms.TradingPlatform import TradingPlatform
@@ -88,7 +90,7 @@ class PoloniexTradingPlatform(TradingPlatform):
             trades_by_trading_platform.append( q.get() )
         
         trades = [Trade(
-            timestamp = int(time.mktime(time.strptime(trade_json["date"], '%Y-%m-%d %H:%M:%S'))),        
+            timestamp = int( datetime.strptime(trade_json["date"]+" +0000", '%Y-%m-%d %H:%M:%S %z').timestamp() ),
             amount = float(trade_json["amount"]),
             price = float(trade_json["rate"]),
             market = self.market,
